@@ -5,8 +5,14 @@ end
 module Histogram
   DEFAULT_BIN_METHOD = :scott
   DEFAULT_QUARTILE_METHOD = :moore_mccabe
+  DEFAULT_BIN_BOUNDARY = :avg
 
   class << self
+
+    def avg_ints(one, two)
+      (one.to_f + two.to_f) / 2.0
+    end
+
     # returns (min, max)
     def minmax(obj)
       if obj.is_a?(Array)
@@ -105,8 +111,8 @@ module Histogram
   #
   # Options:
   #
-  #     :bins => :scott    Scott's method    range/(3.5σ * n^(-1/3))
-  #              :fd       Freedman-Diaconis range/(2*iqrange *n^(-1/3)) (default)
+  #     :bins => :scott    Scott's method    range/(3.5σ * n^(-1/3)) (default)
+  #              :fd       Freedman-Diaconis range/(2*iqrange *n^(-1/3))
   #              :sturges  Sturges' method   log_2(n) + 1 (overly smooth for n > 200)
   #              :middle   the median between :fd, :scott, and :sturges
   #              <Integer> give the number of bins
@@ -184,7 +190,7 @@ module Histogram
       raise ArgumentError, "accepts no more than 2 args"
     end
 
-    opts = ({ :bin_boundary => :avg, :other_sets => [] }).merge(opts)
+    opts = ({ :bin_boundary => DEFAULT_BIN_BOUNDARY, :other_sets => [] }).merge(opts)
 
     bins = opts[:bins] if opts[:bins]
     bins = DEFAULT_BIN_METHOD unless bins
@@ -245,7 +251,7 @@ module Histogram
           (0...(bins.size)).each do |i|
             bin = bins[i]
             break if i == (bins.size - 1)
-            break_points << avg_ints(bin,bins[i+1]) 
+            break_points << Histogram.avg_ints(bin,bins[i+1]) 
           end
           (0...(xvals.size)).each do |i|
             val = xvals[i]
@@ -338,9 +344,6 @@ module Histogram
     [_bins] + freqs_ar
   end
 
-  def avg_ints(one, two) # :nodoc:
-    (one.to_f + two.to_f) / 2.0
-  end
 
 end
 
